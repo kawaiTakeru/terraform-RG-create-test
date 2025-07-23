@@ -1,24 +1,35 @@
 trigger:
-  branches:
-    include:
-      - main
+- main
 
 pool:
-  name: Default
-  demands:
-    - agent.name -equals LAPTOP-OEOER8OI
+  name: Default  # Self-hosted agent の pool 名
 
 steps:
-  - checkout: self
-  - script: |
-      echo "🔁 Terraform Init"
+- checkout: self
+
+- task: Bash@3
+  displayName: 'Step 1: Terraform Init'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "=== Step 1: terraform init 開始 ==="
       terraform init
-    displayName: 'Terraform Init'
-  - script: |
-      echo "📄 Terraform Plan"
+      echo "=== Step 1: terraform init 完了 ==="
+
+- task: Bash@3
+  displayName: 'Step 2: Terraform Plan'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "=== Step 2: terraform plan 開始 ==="
       terraform plan
-    displayName: 'Terraform Plan'
-  - script: |
-      echo "🚀 Terraform Apply"
+      echo "=== Step 2: terraform plan 完了 ==="
+
+- task: Bash@3
+  displayName: 'Step 3: Terraform Apply'
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "=== Step 3: terraform apply 開始 ==="
       terraform apply -auto-approve
-    displayName: 'Terraform Apply'
+      echo "=== Step 3: terraform apply 完了 ==="
