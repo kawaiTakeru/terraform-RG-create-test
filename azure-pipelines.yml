@@ -3,7 +3,7 @@ trigger: none
 pool:
   name: Default  # Self-hosted Agent Pool 名（"Default"で正しいはず）
   demands:
-    - agent.name -equals LAPTOP-OEOER8QI  # 自分のPC名
+    - agent.name -equals LAPTOP-OEOER8OI  # 自分のPC名
 
 steps:
   - checkout: self
