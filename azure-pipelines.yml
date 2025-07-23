@@ -6,30 +6,6 @@ pool:
 
 steps:
 - task: PowerShell@2
-  displayName: 'Check Terraform Version'
-  inputs:
-    targetType: 'inline'
-    script: |
-      terraform -version
-      Write-Host "※ Terraform Version を手動で確認してください"
-
-- task: PowerShell@2
-  displayName: 'Step 1: Terraform Init'
-  inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "📌 Terraform Init 開始"
-      terraform init
-
-- task: PowerShell@2
-  displayName: 'Step 2: Terraform Plan'
-  inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "📋 Terraform Plan 開始"
-      terraform plan -out=tfplan
-
-- task: PowerShell@2
   displayName: 'Step 3: Terraform Apply'
   continueOnError: true
   inputs:
@@ -44,22 +20,13 @@ steps:
       }
 
 - task: PowerShell@2
-  displayName: 'Slack通知（Terraformエラー・デバッグ）'
+  displayName: 'Slack通知（デバッグ版）'
   condition: failed()
   inputs:
-    targetType: 'inline'
-    script: |
-      $webhookUrl = 'https://hooks.slack.com/services/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'
-
-      Write-Host "DEBUG: Webhook URL = [$webhookUrl]"
-
-      $payloadObj = @{
-        text = "❌ Terraform Apply に失敗しました（デバッグ付き）`nパイプライン: $($env:BUILD_DEFINITIONNAME)`nビルドID: $($env:BUILD_BUILDID)`nURL: https://dev.azure.com/$($env:SYSTEM_TEAMPROJECT)/_build/results?buildId=$($env:BUILD_BUILDID)&view=results"
-      }
-      $payloadJson = $payloadObj | ConvertTo-Json -Depth 4
-
-      Write-Host "DEBUG: Payload JSON = $payloadJson"
-
-      $response = Invoke-RestMethod -Uri $webhookUrl -Method POST -Body $payloadJson -ContentType 'application/json; charset=utf-8' -ErrorAction Stop
-
-      Write-Host "DEBUG: Slack response = $response"
+    targetType: 'filePath'
+    filePath: 'scripts/notify-slack.ps1'
+    arguments: >
+      -webhookUrl https://hooks.slack.com/services/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
+      -pipelineName "$(Build.DefinitionName)"
+      -buildId "$(Build.BuildId)"
+      -projectName "$(System.TeamProject)"
