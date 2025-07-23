@@ -1,65 +1,91 @@
 trigger:
-- none  # 手動で実行
+- main
 
 pool:
-  name: Default
-  demands:
-    - agent.name -equals LAPTOP-OEOER8OI  # あなたのPC名
+  vmImage: 'windows-latest'
+
+variables:
+  tfWorkingDir: 'terraform'
 
 steps:
-# Step 1: Terraform Init
+# ----------------------------------------
+# 🧹 Step 1: Terraform Init
+# ----------------------------------------
 - task: PowerShell@2
   displayName: 'Step 1: Terraform Init'
   inputs:
     targetType: 'inline'
     script: |
-      Write-Host "📋 Terraform Init 開始"
+      cd $(tfWorkingDir)
       terraform init
 
-# Step 2: Terraform Plan
+# ----------------------------------------
+# 🧪 Step 2: Terraform Plan
+# ----------------------------------------
 - task: PowerShell@2
   displayName: 'Step 2: Terraform Plan'
   inputs:
     targetType: 'inline'
     script: |
-      Write-Host "📋 Terraform Plan 開始"
+      cd $(tfWorkingDir)
       terraform plan
 
-# Step 3: Terraform Apply
+# ----------------------------------------
+# 🚀 Step 3: Terraform Apply（成功時のみ）
+# ----------------------------------------
 - task: PowerShell@2
   displayName: 'Step 3: Terraform Apply'
-  inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "📋 Terraform Apply 開始"
-      terraform apply -auto-approve
-
-# Step 4: Slack通知（成功時）
-- task: PowerShell@2
-  displayName: 'Notify Slack (Success)'
   condition: succeeded()
   inputs:
     targetType: 'inline'
     script: |
-      $webhookUrl = 'https://hooks.slack.com/services/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'
-      $payload = @{
-        text = "✅ Terraform Apply 成功: rg-terraform-test-01 が作成されました 🎉"
-      } | ConvertTo-Json
-      Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
+      cd $(tfWorkingDir)
+      terraform apply -auto-approve
 
-# Step 5: Slack通知（失敗時）
+# ----------------------------------------
+# ✅ Step 4: Slack通知（成功時）
+# ----------------------------------------
 - task: PowerShell@2
-  displayName: 'Notify Slack (Failure)'
+  displayName: 'Step 4: Notify Slack (Success)'
+  condition: succeeded()
+  inputs:
+    targetType: 'inline'
+    script: |
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+      $webhookUrl = 'https://hooks.slack.com/services/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'
+      $headers = @{
+        "User-Agent" = "AzureDevOpsSlackBot/1.0"
+      }
+      $payload = @{
+        text = "✅ Terraform Apply 完了: リソースが作成されました 🎉"
+      } | ConvertTo-Json -Compress
+      try {
+        Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json' -Headers $headers
+        Write-Host "Slack通知成功（成功通知）"
+      } catch {
+        Write-Host "Slack通知に失敗しました（成功通知）: $_"
+      }
+
+# ----------------------------------------
+# ❌ Step 5: Slack通知（失敗時）
+# ----------------------------------------
+- task: PowerShell@2
+  displayName: 'Step 5: Notify Slack (Failure)'
   condition: failed()
   inputs:
     targetType: 'inline'
     script: |
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
       $webhookUrl = 'https://hooks.slack.com/services/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'
+      $headers = @{
+        "User-Agent" = "AzureDevOpsSlackBot/1.0"
+      }
       $payload = @{
-        text = "❌ Terraform Apply に失敗しました。ログを確認してください。"
-      } | ConvertTo-Json
+        text = "❌ Terraform Apply に失敗しました 💥"
+      } | ConvertTo-Json -Compress
       try {
-        Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
+        Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json' -Headers $headers
+        Write-Host "Slack通知成功（失敗通知）"
       } catch {
-        Write-Host "Slack通知に失敗しました（失敗通知）: $($_.Exception.Message)"
+        Write-Host "Slack通知に失敗しました（失敗通知）: $_"
       }
