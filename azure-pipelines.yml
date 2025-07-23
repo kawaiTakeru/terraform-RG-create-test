@@ -1,13 +1,10 @@
 trigger: none
-
 pr: none
 
 pool:
   name: Default
 
 variables:
-  - name: SLACK_WEBHOOK_URL
-    value: $(SLACK_WEBHOOK_URL)  # UIで secret 変数に設定済み
   - name: System.Debug
     value: 'true'
 
