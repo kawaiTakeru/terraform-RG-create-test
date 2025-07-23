@@ -1,35 +1,33 @@
-trigger:
-- main
+trigger: none
 
 pool:
-  name: Default  # Self-hosted agent の pool 名
+  name: Default  # Self-hosted Agent Pool 名（"Default"で正しいはず）
+  demands:
+    - agent.name -equals LAPTOP-OEOER8QI  # 自分のPC名
 
 steps:
-- checkout: self
+  - checkout: self
 
-- task: Bash@3
-  displayName: 'Step 1: Terraform Init'
-  inputs:
-    targetType: 'inline'
-    script: |
-      echo "=== Step 1: terraform init 開始 ==="
-      terraform init
-      echo "=== Step 1: terraform init 完了 ==="
+  - task: PowerShell@2
+    displayName: 'Step 1: Terraform Init'
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "🔧 Terraform Init 開始"
+        terraform init
 
-- task: Bash@3
-  displayName: 'Step 2: Terraform Plan'
-  inputs:
-    targetType: 'inline'
-    script: |
-      echo "=== Step 2: terraform plan 開始 ==="
-      terraform plan
-      echo "=== Step 2: terraform plan 完了 ==="
+  - task: PowerShell@2
+    displayName: 'Step 2: Terraform Plan'
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "📋 Terraform Plan 開始"
+        terraform plan
 
-- task: Bash@3
-  displayName: 'Step 3: Terraform Apply'
-  inputs:
-    targetType: 'inline'
-    script: |
-      echo "=== Step 3: terraform apply 開始 ==="
-      terraform apply -auto-approve
-      echo "=== Step 3: terraform apply 完了 ==="
+  - task: PowerShell@2
+    displayName: 'Step 3: Terraform Apply'
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "🚀 Terraform Apply 開始"
+        terraform apply -auto-approve
