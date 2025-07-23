@@ -11,7 +11,7 @@ steps:
     targetType: 'inline'
     script: |
       # Slack Webhook URL（最新のものに差し替え）
-      $webhookUrl = "https://hooks.slack.com/services/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"
+      $webhookUrl = "https://hooks.slack.com/services/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"
 
       # 通知ペイロード（日本語メッセージOK）
       $payload = @{
