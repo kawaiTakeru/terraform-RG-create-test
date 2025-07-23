@@ -2,37 +2,23 @@ trigger:
   - none
 
 pool:
-  name: Default  # Self-hosted Agent
+  name: Default  # Self-hosted Agent でも Microsoft-hostedでもOK
 
 steps:
 - task: PowerShell@2
-  displayName: 'Terraform Plan & Apply'
-  continueOnError: true
+  displayName: 'Slack 通知テスト 🚀'
   inputs:
     targetType: 'inline'
     script: |
-      Write-Host "📌 Terraform Init"
-      terraform init
+      # Slack Webhook URL（最新のものに差し替え）
+      $webhookUrl = "https://hooks.slack.com/services/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"
 
-      Write-Host "📋 Terraform Plan"
-      terraform plan -out=tfplan
+      # 通知ペイロード（日本語メッセージOK）
+      $payload = @{
+        text = "✅ PipelineからSlack通知テスト 成功！"
+      } | ConvertTo-Json
 
-      Write-Host "🚀 Terraform Apply"
-      terraform apply tfplan
-      Write-Host "→ Terraform Apply 終了コード: $LASTEXITCODE"
-      if ($LASTEXITCODE -ne 0) {
-        Write-Error "ERROR: Terraform Apply failed with code $LASTEXITCODE"
-        exit 1
-      }
+      # Slackに通知
+      Invoke-RestMethod -Uri $webhookUrl -Method POST -Body $payload -ContentType 'application/json'
 
-- task: PowerShell@2
-  displayName: 'Slack通知（デバッグ版）'
-  condition: failed()
-  inputs:
-    targetType: 'filePath'
-    filePath: 'scripts/notify-slack.ps1'
-    arguments: >
-      -webhookUrl https://hooks.slack.com/services/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
-      -pipelineName "$(Build.DefinitionName)"
-      -buildId "$(Build.BuildId)"
-      -projectName "$(System.TeamProject)"
+      Write-Host "✅ Slack通知 実行完了"
