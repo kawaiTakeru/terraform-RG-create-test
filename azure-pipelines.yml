@@ -4,12 +4,14 @@ trigger:
 pool:
   name: Default
   demands:
-    - agent.name -equals LAPTOP-OEOER8OI  # 自PC名
+    - agent.name -equals LAPTOP-OEOER8OI  # ご自身のPC名に合わせてあります
 
 jobs:
-- job: TerraformJob
-  displayName: "Terraform Resource Group Deployment"
+- job: Job
+  displayName: 'Terraform RG作成＋Slack通知'
   steps:
+
+  - checkout: self
 
   - task: PowerShell@2
     displayName: 'Step 1: Terraform Init'
@@ -35,36 +37,30 @@ jobs:
         Write-Host "📋 Terraform Apply 開始"
         terraform apply -auto-approve
 
-  # ✅ 成功時 Slack 通知
+  # ✅ 成功時のSlack通知
   - task: PowerShell@2
     displayName: 'Notify Slack (Success)'
     condition: succeeded()
     inputs:
       targetType: 'inline'
       script: |
-        $webhookUrl = "https://hooks.slack.com/services/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"
+        $webhookUrl = 'https://hooks.slack.com/services/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'
         $payload = @{
-          text = "✅ Terraform Apply 成功: リソースグループ *rg-terraform-test-01* が作成されました 🎉"
-        } | ConvertTo-Json -Compress
+          text = "✅ Terraform Apply 完了: `rg-terraform-test-01` が作成されました 🎉"
+        } | ConvertTo-Json -Depth 3
+        Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
 
-        try {
-          Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
-        } catch {
-          Write-Host "Slack通知に失敗しました（成功通知）: $($_.Exception.Message)"
-        }
-
-  # ❌ 失敗時 Slack 通知
+  # ❌ 失敗時のSlack通知
   - task: PowerShell@2
     displayName: 'Notify Slack (Failure)'
     condition: failed()
     inputs:
       targetType: 'inline'
       script: |
-        $webhookUrl = "https://hooks.slack.com/services/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"
+        $webhookUrl = 'https://hooks.slack.com/services/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'
         $payload = @{
-          text = "❌ Terraform Apply 失敗: パイプラインが失敗しました。ログを確認してください。"
-        } | ConvertTo-Json -Compress
-
+          text = "❌ Terraform Apply 失敗しました。ログを確認してください。"
+        } | ConvertTo-Json -Depth 3
         try {
           Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
         } catch {
