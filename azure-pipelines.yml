@@ -35,13 +35,11 @@ steps:
 # Terraform Apply
 - task: PowerShell@2
   displayName: 'Step 3: Terraform Apply'
-  continueOnError: true  # ← これ追加！
   inputs:
     targetType: 'inline'
     script: |
       Write-Host "🚀 Terraform Apply 開始"
       terraform apply -auto-approve tfplan
-
 
 # Slack通知（Terraform失敗時）
 - task: PowerShell@2
