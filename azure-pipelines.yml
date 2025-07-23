@@ -1,13 +1,17 @@
 trigger: none
 
+pr: none
+
 pool:
   name: Default
 
 variables:
-  SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)  # Azure Pipeline Library に格納
+  - name: SLACK_WEBHOOK_URL
+    value: $(SLACK_WEBHOOK_URL)  # UIで secret 変数に設定済み
+  - name: System.Debug
+    value: 'true'
 
 steps:
-# 最初の Terraform ステップ等は省略
 - task: PowerShell@2
   displayName: 'Slack通知テスト（変数参照）'
   condition: always()
@@ -28,4 +32,3 @@ steps:
         -ErrorAction Stop
 
       Write-Host "DEBUG: Slack response = $response"
-
