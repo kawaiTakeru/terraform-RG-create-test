@@ -48,8 +48,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      $webhookUrl = 'https://hooks.slack.com/services/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'
-
+      $webhookUrl = 'https://hooks.slack.com/services/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'
       $buildId = $env:BUILD_BUILDID
       $pipelineName = $env:BUILD_DEFINITIONNAME
       $projectName = $env:SYSTEM_TEAMPROJECT
