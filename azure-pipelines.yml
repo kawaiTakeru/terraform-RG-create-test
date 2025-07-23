@@ -6,7 +6,7 @@ trigger:
 pool:
   name: Default
   demands:
-    - agent.name -equals LAPTOP-OEOER8QI
+    - agent.name -equals LAPTOP-OEOER8OI
 
 steps:
   - checkout: self
