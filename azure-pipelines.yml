@@ -1,24 +1,25 @@
-trigger:
-  - none
+trigger: none
 
 pool:
-  name: Default  # Self-hosted Agent でも Microsoft-hostedでもOK
+  name: Default
+
+variables:
+  SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)  # Azure Pipeline Library に格納
 
 steps:
 - task: PowerShell@2
-  displayName: 'Slack 通知テスト 🚀'
+  displayName: 'Slack通知テスト（変数参照）'
   inputs:
-    targetType: 'inline'
+    targetType: inline
     script: |
-      # Slack Webhook URL（最新のものに差し替え）
-      $webhookUrl = "https://hooks.slack.com/services/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"
+      $webhookUrl = "${env:SLACK_WEBHOOK_URL}"
+      Write-Host "DEBUG: Webhook URL = [$webhookUrl]"
 
-      # 通知ペイロード（日本語メッセージOK）
-      $payload = @{
-        text = "✅ PipelineからSlack通知テスト 成功！"
-      } | ConvertTo-Json
-
-      # Slackに通知
-      Invoke-RestMethod -Uri $webhookUrl -Method POST -Body $payload -ContentType 'application/json'
-
-      Write-Host "✅ Slack通知 実行完了"
+      $payload = @{ text = "✅ 通知テスト 変数OK✅" } | ConvertTo-Json
+      Invoke-RestMethod `
+        -Uri $webhookUrl `
+        -Method POST `
+        -Body $payload `
+        -ContentType 'application/json' `
+        -ErrorAction Stop
+      Write-Host "✅ Slack通知 成功"
