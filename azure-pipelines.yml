@@ -1,10 +1,23 @@
 trigger:
 - none
 
+variables:
+  TF_VERSION: '1.6.6'
+
 pool:
-  name: Default  # ← Self-hosted Agent を指定
+  name: Default  # Self-hosted Agent
 
 steps:
+# Terraform バージョン確認
+- task: PowerShell@2
+  displayName: 'Check Terraform Version'
+  inputs:
+    targetType: 'inline'
+    script: |
+      terraform -version
+      Write-Host "※ Terraform Version が ${env:TF_VERSION} であることを確認"
+
+# Terraform Init
 - task: PowerShell@2
   displayName: 'Step 1: Terraform Init'
   inputs:
@@ -13,6 +26,7 @@ steps:
       Write-Host "📌 Terraform Init 開始"
       terraform init
 
+# Terraform Plan
 - task: PowerShell@2
   displayName: 'Step 2: Terraform Plan'
   inputs:
@@ -21,6 +35,7 @@ steps:
       Write-Host "📋 Terraform Plan 開始"
       terraform plan -out=tfplan
 
+# Terraform Apply
 - task: PowerShell@2
   displayName: 'Step 3: Terraform Apply'
   inputs:
@@ -29,7 +44,7 @@ steps:
       Write-Host "🚀 Terraform Apply 開始"
       terraform apply -auto-approve tfplan
 
-# ✅ 成功時 Slack 通知
+# Slack通知（成功）
 - task: PowerShell@2
   displayName: 'Notify Slack (Success)'
   condition: succeeded()
@@ -37,10 +52,10 @@ steps:
     targetType: 'inline'
     script: |
       $webhookUrl = 'https://hooks.slack.com/services/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'
-      $payload = @{ text = "✅ Terraform Apply 成功: `rg-terraform-test-01` が作成されました 🎉" } | ConvertTo-Json
+      $payload = @{ text = "✅ Terraform Apply 成功 (Version ${env:TF_VERSION}) 🎉" } | ConvertTo-Json
       Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
 
-# ❌ 失敗時 Slack 通知
+# Slack通知（失敗）
 - task: PowerShell@2
   displayName: 'Notify Slack (Failure)'
   condition: failed()
@@ -48,9 +63,9 @@ steps:
     targetType: 'inline'
     script: |
       $webhookUrl = 'https://hooks.slack.com/services/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'
-      $payload = @{ text = "❌ Terraform Apply 失敗: エラーが発生しました ⚠️" } | ConvertTo-Json
+      $payload = @{ text = "❌ Terraform Apply 失敗 (Version ${env:TF_VERSION}) ⚠️" } | ConvertTo-Json
       try {
         Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
       } catch {
-        Write-Host "Slack通知に失敗しました（失敗通知）: $($_.Exception.Message)"
+        Write-Host "Slack通知に失敗しました: $($_.Exception.Message)"
       }
