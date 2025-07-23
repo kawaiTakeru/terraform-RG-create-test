@@ -7,19 +7,25 @@ variables:
   SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)  # Azure Pipeline Library に格納
 
 steps:
+# 最初の Terraform ステップ等は省略
 - task: PowerShell@2
   displayName: 'Slack通知テスト（変数参照）'
+  condition: always()
   inputs:
-    targetType: inline
+    targetType: 'inline'
     script: |
       $webhookUrl = "${env:SLACK_WEBHOOK_URL}"
       Write-Host "DEBUG: Webhook URL = [$webhookUrl]"
 
       $payload = @{ text = "✅ 通知テスト 変数OK✅" } | ConvertTo-Json
-      Invoke-RestMethod `
+      Write-Host "DEBUG: Payload JSON = $payload"
+
+      $response = Invoke-RestMethod `
         -Uri $webhookUrl `
         -Method POST `
         -Body $payload `
         -ContentType 'application/json' `
         -ErrorAction Stop
-      Write-Host "✅ Slack通知 成功"
+
+      Write-Host "DEBUG: Slack response = $response"
+
