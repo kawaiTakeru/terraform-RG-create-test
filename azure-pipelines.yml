@@ -6,13 +6,19 @@ pool:
 
 steps:
 - task: PowerShell@2
-  displayName: 'Step 3: Terraform Apply'
+  displayName: 'Terraform Plan & Apply'
   continueOnError: true
   inputs:
     targetType: 'inline'
     script: |
-      Write-Host "🚀 Terraform Apply 開始"
-      terraform apply -auto-approve tfplan
+      Write-Host "📌 Terraform Init"
+      terraform init
+
+      Write-Host "📋 Terraform Plan"
+      terraform plan -out=tfplan
+
+      Write-Host "🚀 Terraform Apply"
+      terraform apply tfplan
       Write-Host "→ Terraform Apply 終了コード: $LASTEXITCODE"
       if ($LASTEXITCODE -ne 0) {
         Write-Error "ERROR: Terraform Apply failed with code $LASTEXITCODE"
