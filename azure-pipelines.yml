@@ -1,33 +1,47 @@
-trigger: none
+trigger:
+- main
 
 pool:
-  name: Default  # Self-hosted Agent Pool 名（"Default"で正しいはず）
+  name: Default
   demands:
-    - agent.name -equals LAPTOP-OEOER8OI  # 自分のPC名
+    - agent.name -equals LAPTOP-OEOER8OI
 
 steps:
-  - checkout: self
+- checkout: self
 
-  - task: PowerShell@2
-    displayName: 'Step 1: Terraform Init'
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "🔧 Terraform Init 開始"
-        terraform init
+- task: PowerShell@2
+  displayName: 'Step 1: Terraform Init'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "📦 Terraform Init 開始"
+      terraform init
 
-  - task: PowerShell@2
-    displayName: 'Step 2: Terraform Plan'
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "📋 Terraform Plan 開始"
-        terraform plan
+- task: PowerShell@2
+  displayName: 'Step 2: Terraform Plan'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "📝 Terraform Plan 開始"
+      terraform plan
 
-  - task: PowerShell@2
-    displayName: 'Step 3: Terraform Apply'
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "🚀 Terraform Apply 開始"
-        terraform apply -auto-approve
+- task: PowerShell@2
+  displayName: 'Step 3: Terraform Apply'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "🚀 Terraform Apply 開始"
+      terraform apply -auto-approve
+
+# ✅ Slack 通知ステップ
+- task: PowerShell@2
+  displayName: 'Notify Slack'
+  condition: succeeded()
+  inputs:
+    targetType: 'inline'
+    script: |
+      $webhookUrl = 'https://hooks.slack.com/services/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'
+      $payload = @{
+        text = "✅ Terraform Apply 完了: rg-terraform-test-01 が作成されました 🎉"
+      } | ConvertTo-Json -Compress
+      Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
