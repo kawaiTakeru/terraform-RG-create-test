@@ -33,15 +33,28 @@ steps:
       Write-Host "🚀 Terraform Apply 開始"
       terraform apply -auto-approve
 
-# ✅ Slack 通知ステップ
+# ✅ 成功時のSlack通知
 - task: PowerShell@2
-  displayName: 'Notify Slack'
+  displayName: 'Notify Slack (Success)'
   condition: succeeded()
   inputs:
     targetType: 'inline'
     script: |
       $webhookUrl = 'https://hooks.slack.com/services/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'
       $payload = @{
-        text = "✅ Terraform Apply 完了: rg-terraform-test-01 が作成されました 🎉"
+        text = "✅ Terraform Apply 成功: rg-terraform-test-01 が作成されました 🎉"
+      } | ConvertTo-Json -Compress
+      Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
+
+# ❌ 失敗時のSlack通知
+- task: PowerShell@2
+  displayName: 'Notify Slack (Failure)'
+  condition: failed()
+  inputs:
+    targetType: 'inline'
+    script: |
+      $webhookUrl = 'https://hooks.slack.com/services/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'
+      $payload = @{
+        text = "❌ Terraform Apply 失敗しました。ログを確認してください。"
       } | ConvertTo-Json -Compress
       Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $payload -ContentType 'application/json'
