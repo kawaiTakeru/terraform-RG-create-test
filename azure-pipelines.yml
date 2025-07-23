@@ -5,7 +5,6 @@ pool:
   name: Default  # Self-hosted Agent
 
 steps:
-# Terraform バージョン確認
 - task: PowerShell@2
   displayName: 'Check Terraform Version'
   inputs:
@@ -14,7 +13,6 @@ steps:
       terraform -version
       Write-Host "※ Terraform Version を手動で確認してください"
 
-# Terraform Init
 - task: PowerShell@2
   displayName: 'Step 1: Terraform Init'
   inputs:
@@ -23,7 +21,6 @@ steps:
       Write-Host "📌 Terraform Init 開始"
       terraform init
 
-# Terraform Plan
 - task: PowerShell@2
   displayName: 'Step 2: Terraform Plan'
   inputs:
@@ -32,7 +29,6 @@ steps:
       Write-Host "📋 Terraform Plan 開始"
       terraform plan -out=tfplan
 
-# Terraform Apply（途中まで失敗でも後続続行させる）
 - task: PowerShell@2
   displayName: 'Step 3: Terraform Apply'
   continueOnError: true
@@ -47,32 +43,23 @@ steps:
         exit 1
       }
 
-# Slack通知（Terraformエラー時）
 - task: PowerShell@2
-  displayName: 'Slack通知（Terraformエラー）'
+  displayName: 'Slack通知（Terraformエラー・デバッグ）'
   condition: failed()
   inputs:
     targetType: 'inline'
     script: |
-      $webhookUrl = 'https://hooks.slack.com/services/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'
-      $buildId = $env:BUILD_BUILDID
-      $pipelineName = $env:BUILD_DEFINITIONNAME
-      $projectName = $env:SYSTEM_TEAMPROJECT
-      $url = "https://dev.azure.com/$($env:SYSTEM_COLLECTIONURI.TrimEnd('/'))/$projectName/_build/results?buildId=$buildId&view=results"
+      $webhookUrl = 'https://hooks.slack.com/services/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'
 
-      # ログ出力：URLとJSON内容を確認
       Write-Host "DEBUG: Webhook URL = [$webhookUrl]"
-      $logPayload = @{
-        text = "❌ Terraform Apply に失敗しました（デバッグ付き）`nパイプライン: $pipelineName`nビルドID: $buildId`nURL: $url"
-        attachments = @(@{
-          text = "$(Build.Repository.Name)：ビルドログ内のデバッグを確認してください。"
-        })
+
+      $payloadObj = @{
+        text = "❌ Terraform Apply に失敗しました（デバッグ付き）`nパイプライン: $($env:BUILD_DEFINITIONNAME)`nビルドID: $($env:BUILD_BUILDID)`nURL: https://dev.azure.com/$($env:SYSTEM_TEAMPROJECT)/_build/results?buildId=$($env:BUILD_BUILDID)&view=results"
       }
+      $payloadJson = $payloadObj | ConvertTo-Json -Depth 4
 
-      Write-Host "DEBUG: Payload JSON ="
-      $logPayload | ConvertTo-Json -Depth 4 | Write-Host
+      Write-Host "DEBUG: Payload JSON = $payloadJson"
 
-      $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes(($logPayload | ConvertTo-Json -Depth 4))
-      $response = Invoke-RestMethod -Uri $webhookUrl -Method POST -Body $payloadBytes -ContentType 'application/json; charset=utf-8' -ErrorAction Stop
+      $response = Invoke-RestMethod -Uri $webhookUrl -Method POST -Body $payloadJson -ContentType 'application/json; charset=utf-8' -ErrorAction Stop
 
       Write-Host "DEBUG: Slack response = $response"
