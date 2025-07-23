@@ -4,24 +4,21 @@ trigger:
       - main
 
 pool:
-  name: Default  # LAPTOP-OEOER8QI が所属するPool
+  name: Default
   demands:
     - agent.name -equals LAPTOP-OEOER8QI
 
 steps:
-- checkout: self
-
-- script: |
-    echo "🛠 Terraform Init"
-    terraform init
-  displayName: 'Terraform Init'
-
-- script: |
-    echo "🔍 Terraform Plan"
-    terraform plan
-  displayName: 'Terraform Plan'
-
-- script: |
-    echo "🚀 Terraform Apply"
-    terraform apply -auto-approve
-  displayName: 'Terraform Apply'
+  - checkout: self
+  - script: |
+      echo "🔁 Terraform Init"
+      terraform init
+    displayName: 'Terraform Init'
+  - script: |
+      echo "📄 Terraform Plan"
+      terraform plan
+    displayName: 'Terraform Plan'
+  - script: |
+      echo "🚀 Terraform Apply"
+      terraform apply -auto-approve
+    displayName: 'Terraform Apply'
