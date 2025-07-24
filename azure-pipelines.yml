@@ -1,13 +1,3 @@
-trigger: none
-pr: none
-
-pool:
-  name: Default
-
-variables:
-  - name: System.Debug
-    value: 'true'
-
 steps:
 - task: PowerShell@2
   displayName: 'Slack通知（Secret経由）'
@@ -32,4 +22,13 @@ steps:
           -Uri $webhookUrl `
           -Method POST `
           -Body $payload `
-          -C
+          -ContentType 'application/json' `
+          -ErrorAction Stop
+
+        Write-Host "✅ Slack通知成功: $($response | Out-String)"
+      } catch {
+        Write-Error "❌ Slack通知失敗: $_"
+        exit 1
+      }
+  env:
+    SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
