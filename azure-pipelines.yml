@@ -17,6 +17,12 @@ steps:
     pwsh: true
     script: |
       $webhookUrl = $env:SLACK_WEBHOOK_URL
+
+      if (-not $webhookUrl) {
+        Write-Error "❌ SLACK_WEBHOOK_URL が空です。Pipeline の変数を確認してください。"
+        exit 1
+      }
+
       $payload = @{ text = "✅ Slack通知成功 from secret ✅" } | ConvertTo-Json -Compress
 
       try {
