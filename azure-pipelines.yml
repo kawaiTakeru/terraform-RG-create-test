@@ -4,21 +4,15 @@ pr: none
 pool:
   name: Default
 
-variables:
-  - name: System.Debug
-    value: 'true'
-
 steps:
 - task: PowerShell@2
   displayName: 'Slack通知テスト（pwsh対応）'
   condition: always()
-  env:
-    SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
   inputs:
     targetType: 'inline'
-    pwsh: true   # ← これが重要！！
+    pwsh: true
     script: |
-      $webhookUrl = "${env:SLACK_WEBHOOK_URL}"
+      $webhookUrl = 'https://hooks.slack.com/services/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'
       Write-Host "DEBUG: Webhook URL = [$webhookUrl]"
 
       $payload = @{ text = "✅ 通知テスト from pwsh ✅" } | ConvertTo-Json
