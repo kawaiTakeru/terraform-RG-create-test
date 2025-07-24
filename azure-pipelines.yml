@@ -10,33 +10,16 @@ variables:
 
 steps:
 - task: PowerShell@2
-  displayName: 'Slack通知（Secret経由・デバッグあり）'
+  displayName: 'Slack通知（Secretデバッグ）'
   condition: always()
   inputs:
     targetType: 'inline'
     pwsh: true
     script: |
       $webhookUrl = $env:SLACK_WEBHOOK_URL
-
       Write-Host "DEBUG: \$env:SLACK_WEBHOOK_URL = '$webhookUrl'"
 
       if (-not $webhookUrl) {
         Write-Error "❌ SLACK_WEBHOOK_URL が空です。Pipeline の変数を確認してください。"
-        exit 1
-      }
-
-      $payload = @{ text = "✅ Slack通知成功 from secret ✅" } | ConvertTo-Json -Compress
-
-      try {
-        $response = Invoke-RestMethod `
-          -Uri $webhookUrl `
-          -Method POST `
-          -Body $payload `
-          -ContentType 'application/json' `
-          -ErrorAction Stop
-
-        Write-Host "✅ Slack通知成功: $($response | Out-String)"
-      } catch {
-        Write-Error "❌ Slack通知失敗: $_"
         exit 1
       }
