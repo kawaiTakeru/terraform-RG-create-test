@@ -6,7 +6,7 @@ pool:
 
 variables:
   - name: System.Debug
-    value: 'false'  # セキュリティのためデバッグ出力オフ
+    value: 'false'
 
 steps:
 - task: PowerShell@2
@@ -16,19 +16,5 @@ steps:
     targetType: 'inline'
     pwsh: true
     script: |
-      $webhookUrl = "${env:SLACK_WEBHOOK_URL}"
-      $payload = @{ text = "✅ Slack通知成功 from secret ✅" } | ConvertTo-Json -Compress
-
-      try {
-        $response = Invoke-RestMethod `
-          -Uri $webhookUrl `
-          -Method POST `
-          -Body $payload `
-          -ContentType 'application/json' `
-          -ErrorAction Stop
-
-        Write-Host "✅ Slack通知成功: $($response | Out-String)"
-      } catch {
-        Write-Error "❌ Slack通知失敗: $_"
-        exit 1
-      }
+      $webhookUrl = $env:SLACK_WEBHOOK_URL
+      $payload = @{ text = "✅ Slack通知成功 from secret ✅" } | ConvertTo-Js
