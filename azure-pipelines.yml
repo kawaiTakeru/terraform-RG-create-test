@@ -1,28 +1,15 @@
-trigger: none
-pr: none
-
-pool:
-  name: Default
+variables:
+  - name: System.Debug
+    value: 'false'  # ⚠️ デバッグは無効にすること
 
 steps:
 - task: PowerShell@2
-  displayName: 'Slack通知テスト（pwsh対応）'
+  displayName: 'Slack通知（Secret変数）'
   condition: always()
   inputs:
     targetType: 'inline'
     pwsh: true
     script: |
-      $webhookUrl = 'https://hooks.slack.com/services/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'
-      Write-Host "DEBUG: Webhook URL = [$webhookUrl]"
-
-      $payload = @{ text = "✅ 通知テスト from pwsh ✅" } | ConvertTo-Json
-      Write-Host "DEBUG: Payload JSON = $payload"
-
-      $response = Invoke-RestMethod `
-        -Uri $webhookUrl `
-        -Method POST `
-        -Body $payload `
-        -ContentType 'application/json' `
-        -ErrorAction Stop
-
-      Write-Host "DEBUG: Slack response = $response"
+      $webhookUrl = "${env:SLACK_WEBHOOK_URL}"  # Secret参照
+      $payload = @{ text = "✅ Secret経由で通知成功 ✅" } | ConvertTo-Json
+      Invoke-RestMethod -Uri $webhookUrl -Method POST -Body $payload -ContentType 'application/json' -ErrorAction Stop
