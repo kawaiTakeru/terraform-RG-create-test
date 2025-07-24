@@ -1,34 +1,50 @@
-steps:
-- task: PowerShell@2
-  displayName: 'Slack通知（Secret経由）'
-  condition: always()
-  inputs:
-    targetType: 'inline'
-    pwsh: true
-    script: |
-      $webhookUrl = $env:SLACK_WEBHOOK_URL
+trigger: none
+pr: none
 
-      Write-Host "DEBUG: \$env:SLACK_WEBHOOK_URL = '$webhookUrl'"
+pool:
+  name: Default  # 自分のSelf-hosted Agent名に応じて変更
 
-      if (-not $webhookUrl) {
-        Write-Error "❌ SLACK_WEBHOOK_URL が空です。Pipeline の変数を確認してください。"
-        exit 1
-      }
+variables:
+  - name: System.Debug
+    value: 'true'  # デバッグログを有効化（不要なら 'false'）
 
-      $payload = @{ text = "✅ Slack通知成功 from secret ✅" } | ConvertTo-Json -Compress
+stages:
+- stage: SlackNotification
+  displayName: 'Slack通知ステージ'
+  jobs:
+  - job: NotifySlack
+    displayName: 'Slack通知ジョブ'
+    steps:
+    - task: PowerShell@2
+      displayName: 'Slack通知（Secret経由）'
+      condition: always()
+      inputs:
+        targetType: 'inline'
+        pwsh: true
+        script: |
+          $webhookUrl = $env:SLACK_WEBHOOK_URL
 
-      try {
-        $response = Invoke-RestMethod `
-          -Uri $webhookUrl `
-          -Method POST `
-          -Body $payload `
-          -ContentType 'application/json' `
-          -ErrorAction Stop
+          Write-Host "DEBUG: \$env:SLACK_WEBHOOK_URL = '$webhookUrl'"
 
-        Write-Host "✅ Slack通知成功: $($response | Out-String)"
-      } catch {
-        Write-Error "❌ Slack通知失敗: $_"
-        exit 1
-      }
-  env:
-    SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
+          if (-not $webhookUrl) {
+            Write-Error "❌ SLACK_WEBHOOK_URL が空です。Pipeline の変数を確認してください。"
+            exit 1
+          }
+
+          $payload = @{ text = "✅ Slack通知成功 from secret ✅" } | ConvertTo-Json -Compress
+
+          try {
+            $response = Invoke-RestMethod `
+              -Uri $webhookUrl `
+              -Method POST `
+              -Body $payload `
+              -ContentType 'application/json' `
+              -ErrorAction Stop
+
+            Write-Host "✅ Slack通知成功: $($response | Out-String)"
+          } catch {
+            Write-Error "❌ Slack通知失敗: $_"
+            exit 1
+          }
+      env:
+        SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
