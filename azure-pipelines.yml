@@ -10,17 +10,18 @@ variables:
 
 steps:
 - task: PowerShell@2
-  displayName: 'Slack通知テスト（変数参照）'
+  displayName: 'Slack通知テスト（pwsh対応）'
   condition: always()
   env:
-    SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)  # 明示的に環境変数として渡す
+    SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
   inputs:
     targetType: 'inline'
+    pwsh: true   # ← これが重要！！
     script: |
       $webhookUrl = "${env:SLACK_WEBHOOK_URL}"
       Write-Host "DEBUG: Webhook URL = [$webhookUrl]"
 
-      $payload = @{ text = "✅ 通知テスト 変数OK✅" } | ConvertTo-Json
+      $payload = @{ text = "✅ 通知テスト from pwsh ✅" } | ConvertTo-Json
       Write-Host "DEBUG: Payload JSON = $payload"
 
       $response = Invoke-RestMethod `
