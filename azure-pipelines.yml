@@ -6,17 +6,19 @@ pool:
 
 variables:
   - name: System.Debug
-    value: 'false'
+    value: 'true'
 
 steps:
 - task: PowerShell@2
-  displayName: 'Slack通知（Secret経由）'
+  displayName: 'Slack通知（Secret経由・デバッグあり）'
   condition: always()
   inputs:
     targetType: 'inline'
     pwsh: true
     script: |
       $webhookUrl = $env:SLACK_WEBHOOK_URL
+
+      Write-Host "DEBUG: \$env:SLACK_WEBHOOK_URL = '$webhookUrl'"
 
       if (-not $webhookUrl) {
         Write-Error "❌ SLACK_WEBHOOK_URL が空です。Pipeline の変数を確認してください。"
