@@ -1,15 +1,34 @@
+trigger: none
+pr: none
+
+pool:
+  name: Default
+
 variables:
   - name: System.Debug
-    value: 'false'  # ⚠️ デバッグは無効にすること
+    value: 'false'  # セキュリティのためデバッグ出力オフ
 
 steps:
 - task: PowerShell@2
-  displayName: 'Slack通知（Secret変数）'
+  displayName: 'Slack通知（Secret経由）'
   condition: always()
   inputs:
     targetType: 'inline'
     pwsh: true
     script: |
-      $webhookUrl = "${env:SLACK_WEBHOOK_URL}"  # Secret参照
-      $payload = @{ text = "✅ Secret経由で通知成功 ✅" } | ConvertTo-Json
-      Invoke-RestMethod -Uri $webhookUrl -Method POST -Body $payload -ContentType 'application/json' -ErrorAction Stop
+      $webhookUrl = "${env:SLACK_WEBHOOK_URL}"
+      $payload = @{ text = "✅ Slack通知成功 from secret ✅" } | ConvertTo-Json -Compress
+
+      try {
+        $response = Invoke-RestMethod `
+          -Uri $webhookUrl `
+          -Method POST `
+          -Body $payload `
+          -ContentType 'application/json' `
+          -ErrorAction Stop
+
+        Write-Host "✅ Slack通知成功: $($response | Out-String)"
+      } catch {
+        Write-Error "❌ Slack通知失敗: $_"
+        exit 1
+      }
