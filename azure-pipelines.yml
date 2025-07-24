@@ -12,6 +12,8 @@ steps:
 - task: PowerShell@2
   displayName: 'Slack通知テスト（変数参照）'
   condition: always()
+  env:
+    SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)  # 明示的に環境変数として渡す
   inputs:
     targetType: 'inline'
     script: |
